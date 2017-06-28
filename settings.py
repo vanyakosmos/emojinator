@@ -3,6 +3,8 @@ import logging
 
 from dotenv import load_dotenv, find_dotenv
 
+from database import Database
+
 load_dotenv(find_dotenv())
 
 logging.basicConfig(format='%(asctime)s ~ %(levelname)-10s %(name)-25s %(message)s',
@@ -20,3 +22,5 @@ REDIS_URL = os.getenv('REDIS_URL')
 # heroku
 APP_NAME = os.getenv('APP_NAME')
 PORT = os.getenv('PORT')
+
+database = Database()
