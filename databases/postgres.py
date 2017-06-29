@@ -5,7 +5,7 @@ import psycopg2 as psycopg2
 from telegram import Message, CallbackQuery, Chat, User
 
 from . import AbstractDB
-from settings import DATABASE_URL
+from env_conts import DATABASE_URL
 
 
 class PostgresDatabase(AbstractDB):
@@ -19,36 +19,36 @@ class PostgresDatabase(AbstractDB):
 
     def create_tables(self):
         self.cur.execute("CREATE TABLE users ("
-                         "id INTEGER PRIMARY KEY, "
+                         "id BIGINT PRIMARY KEY, "
                          "fname varchar, "
                          "lname varchar, "
                          "username varchar);")
 
         self.cur.execute("CREATE TABLE chats ("
-                         "id INTEGER PRIMARY KEY, "
+                         "id BIGINT PRIMARY KEY, "
                          "title varchar, "
                          "username varchar);")
 
         self.cur.execute("CREATE TABLE messages ("
-                         "id INTEGER PRIMARY KEY, "
-                         "from_user_id INTEGER REFERENCES users(id), "
-                         "forwarded_from_id INTEGER REFERENCES users(id));")
+                         "id BIGINT PRIMARY KEY, "
+                         "from_user_id BIGINT REFERENCES users(id), "
+                         "forwarded_from_id BIGINT REFERENCES users(id));")
 
         self.cur.execute("CREATE TABLE chat_reactions ("
                          "id SERIAL PRIMARY KEY, "
-                         "chat_id INTEGER REFERENCES chats(id), "
+                         "chat_id BIGINT REFERENCES chats(id), "
                          "reaction VARCHAR);")
 
         self.cur.execute("CREATE TABLE reactions ("
                          "id SERIAL PRIMARY KEY, "
-                         "chat_id INTEGER REFERENCES chats(id), "
-                         "message_id INTEGER REFERENCES messages(id),"
+                         "chat_id BIGINT REFERENCES chats(id), "
+                         "message_id BIGINT REFERENCES messages(id),"
                          "reaction VARCHAR,"
                          "count INTEGER);")
 
         self.cur.execute("CREATE TABLE rates ("
                          "id SERIAL PRIMARY KEY, "
-                         "user_id INTEGER REFERENCES users(id),"
+                         "user_id BIGINT REFERENCES users(id),"
                          "reaction_id INTEGER REFERENCES reactions(id));")
         # check:
         # self.cur.execute("INSERT INTO users (id, fname, lname, username) VALUES (1, 'kek', 'cheburek', 'pshe')")
@@ -87,6 +87,7 @@ class PostgresDatabase(AbstractDB):
         Get current reactions for chat and set them to the message.
         """
         self.add_user(message_from)
+        self.add_user(op)
 
         self.cur.execute("SELECT reaction FROM chat_reactions WHERE chat_id=%(chat_id)s;",
                          {'chat_id': message.chat_id})
@@ -102,6 +103,8 @@ class PostgresDatabase(AbstractDB):
         self.conn.commit()
 
     def add_user(self, user: User):
+        if not user:
+            return
         self.cur.execute("SELECT * FROM users "
                          "WHERE id=%(user_id)s;",
                          {'user_id': user.id})
