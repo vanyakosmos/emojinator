@@ -4,7 +4,7 @@ from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, Callb
 
 from commands import command_start, command_set_emoji_set
 from sender import resend_message, emoji_callback
-from settings import BOT_TOKEN
+from settings import BOT_TOKEN, database
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +33,7 @@ def main():
 
     updater.start_polling()
     updater.idle()
+    database.close()
 
 
 if __name__ == '__main__':

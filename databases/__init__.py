@@ -1,6 +1,6 @@
 from typing import Dict
 
-from telegram import Message, CallbackQuery, Chat
+from telegram import Message, CallbackQuery, Chat, User
 
 
 class AbstractDB(object):
@@ -10,7 +10,7 @@ class AbstractDB(object):
         """
         pass
 
-    def add_message(self, message: Message):
+    def add_message(self, message: Message, message_from: User, op: User):
         """
         Get current reactions for chat and set them to the message.
         """

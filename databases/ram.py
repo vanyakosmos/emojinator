@@ -1,7 +1,7 @@
 import logging
 from typing import Dict
 
-from telegram import Message, CallbackQuery, Chat
+from telegram import Message, CallbackQuery, Chat, User
 
 from . import AbstractDB
 
@@ -98,7 +98,7 @@ class Database(AbstractDB):
         message = chat.get_message(message_id)
         return message.rate(chosen_emoji, user_id)
 
-    def add_message(self, message: Message):
+    def add_message(self, message: Message, message_from: User, op: User):
         """
         Registering message with current emojis sat for chat.
         """

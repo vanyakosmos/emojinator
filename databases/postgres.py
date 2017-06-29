@@ -31,7 +31,8 @@ class PostgresDatabase(AbstractDB):
 
         self.cur.execute("CREATE TABLE messages ("
                          "id INTEGER PRIMARY KEY, "
-                         "type VARCHAR);")
+                         "from_user_id INTEGER REFERENCES users(id), "
+                         "forwarded_from_id INTEGER REFERENCES users(id));")
 
         self.cur.execute("CREATE TABLE chat_reactions ("
                          "id SERIAL PRIMARY KEY, "
@@ -81,16 +82,18 @@ class PostgresDatabase(AbstractDB):
                          {'chat_id': chat.id, 'em1': '👍', 'em2': '👎'})
         self.conn.commit()
 
-    def add_message(self, message: Message):
+    def add_message(self, message: Message, message_from: User, op: User):
         """
         Get current reactions for chat and set them to the message.
         """
+        self.add_user(message_from)
+
         self.cur.execute("SELECT reaction FROM chat_reactions WHERE chat_id=%(chat_id)s;",
                          {'chat_id': message.chat_id})
         reactions = self.cur.fetchall()  # [(emoji, )]
-        self.cur.execute("INSERT INTO messages (id, type) VALUES "
-                         "(%s, %s)",
-                         (message.message_id, 'message'))  # fixme: specify type
+        self.cur.execute("INSERT INTO messages (id, from_user_id, forwarded_from_id) VALUES "
+                         "(%s, %s, %s)",
+                         (message.message_id, message_from.id, op.id if op else None))
         for reaction in reactions:
             emoji = reaction[0]
             self.cur.execute("INSERT INTO reactions (chat_id, message_id, reaction, count) VALUES "
@@ -118,12 +121,18 @@ class PostgresDatabase(AbstractDB):
         chat_id, message_id, user_id and chosen emoji.
         """
         # todo: optimise database calls (?)
-        # todo: protect against the ability to rate messages that are not in database
         chat_id = query.message.chat_id
         message_id = query.message.message_id
         user_id = query.from_user.id
         chosen_emoji = query.data
         self.logger.debug(f'Rating message: {message_id}, em: {chosen_emoji}')
+
+        # protect against the ability to rate messages that are not in database
+        self.cur.execute("SELECT * FROM messages WHERE id=%(message_id)s;", {'message_id': message_id})
+        mes = self.cur.fetchone()
+        if not mes:
+            return {}
+
         self.add_user(query.from_user)
 
         # get reactions for message
@@ -133,8 +142,8 @@ class PostgresDatabase(AbstractDB):
         reactions = self.cur.fetchall()
 
         rated_emoji = None
-        chosen_reaction_id = 0
-        rated_reaction_id = 0
+        chosen_reaction_id = -1
+        rated_reaction_id = -1
         res = {}
         for reaction_id, reaction, count in reactions:
             self.cur.execute("SELECT * FROM rates WHERE user_id=%(user_id)s AND reaction_id=%(reaction_id)s;",

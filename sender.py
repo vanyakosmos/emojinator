@@ -36,8 +36,10 @@ def resend_message(bot: Bot, update: Update):
 
 def get_emoji_markup(emojis):
     keyboard = []
-    for e, count in emojis.items():
+    sorted_ems = sorted(emojis.keys())
+    for e in sorted_ems:
         text = e
+        count = emojis[e]
         if count:
             text += f' {count}'
         keyboard.append(InlineKeyboardButton(text, callback_data=e))
@@ -48,10 +50,11 @@ def emoji_callback(bot: Bot, update: Update):
     query = update.callback_query
     message = query.message
     res = database.rate(query)
-    reply_markup = get_emoji_markup(res)
-    bot.edit_message_reply_markup(chat_id=message.chat_id,
-                                  message_id=message.message_id,
-                                  reply_markup=reply_markup)
+    if res:
+        reply_markup = get_emoji_markup(res)
+        bot.edit_message_reply_markup(chat_id=message.chat_id,
+                                      message_id=message.message_id,
+                                      reply_markup=reply_markup)
 
 
 def send_media(message: Message, send_media_func, file_type_id: dict):
@@ -70,5 +73,5 @@ def send_media(message: Message, send_media_func, file_type_id: dict):
                                    caption=caption[:200],
                                    reply_markup=reply_markup,
                                    **file_type_id)
-    database.add_message(sent_message)
+    database.add_message(sent_message, message.from_user, message.forward_from)
     message.delete()
