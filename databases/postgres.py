@@ -5,17 +5,17 @@ import psycopg2 as psycopg2
 from telegram import Message, CallbackQuery, Chat, User
 
 from . import AbstractDB
+from settings import DATABASE_URL
 
 
 class PostgresDatabase(AbstractDB):
     def __init__(self):
         self.logger = logging.getLogger(self.__class__.__name__)
-        self.conn = psycopg2.connect("dbname='test' user='postgres' host='0.0.0.0' password='' port='5432'")
+        self.conn = psycopg2.connect(DATABASE_URL)
         self.cur = self.conn.cursor()
 
         self.drop_all_tables()
         self.create_tables()
-        # self.close()
 
     def create_tables(self):
         self.cur.execute("CREATE TABLE users ("
