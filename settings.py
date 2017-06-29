@@ -3,7 +3,8 @@ import logging
 
 from dotenv import load_dotenv, find_dotenv
 
-from database import Database
+from databases.ram import Database
+from databases.postgres import PostgresDatabase
 
 load_dotenv(find_dotenv())
 
@@ -23,4 +24,5 @@ REDIS_URL = os.getenv('REDIS_URL')
 APP_NAME = os.getenv('APP_NAME')
 PORT = os.getenv('PORT')
 
-database = Database()
+# database = Database()
+database = PostgresDatabase()

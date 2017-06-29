@@ -10,9 +10,9 @@ logger = logging.getLogger(__name__)
 
 def resend_message(bot: Bot, update: Update):
     message: Message = update.message
-    database.init_chat(message.chat_id)
+    database.init_chat(message.chat)
 
-    if message.forward_from.username == 'dummy2105_bot':
+    if message.forward_from and message.forward_from.username == 'dummy2105_bot':
         return
 
     if message.photo:
