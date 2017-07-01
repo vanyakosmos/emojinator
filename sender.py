@@ -1,7 +1,7 @@
 import re
 import logging
 
-from telegram import Bot, Update, Message, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import Bot, Update, Message, InlineKeyboardButton, InlineKeyboardMarkup, User, TelegramError
 
 from settings import database
 
@@ -60,14 +60,27 @@ def emoji_callback(bot: Bot, update: Update):
                                       reply_markup=reply_markup)
 
 
+def full_name(user: User):
+    ln = ' ' + user.last_name if user.last_name else ''
+    return user.first_name + ln
+
+
 def add_author(message: Message):
-    text = f'🌚 by @{message.from_user.username}'
+    if message.from_user.username:
+        text = f'🌚 by @{message.from_user.username}'
+    else:
+        text = f'🌚 by {full_name(message.from_user)}'
+
     if message.forward_from and message.from_user.username != message.forward_from.username:
         if message.forward_from.username:
             text += f', from @{message.forward_from.username}'
-    if message.forward_from_chat and message.from_user.username != message.forward_from_chat.username:
+        else:
+            text += f', from {full_name(message.forward_from)}'
+
+    if message.forward_from_chat:
         if message.forward_from_chat.username:
             text += f', from @{message.forward_from_chat.username}'
+
     if message.caption:
         text = message.caption + '\n' + text
     if message.text:
