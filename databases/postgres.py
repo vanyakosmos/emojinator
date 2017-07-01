@@ -14,8 +14,9 @@ class PostgresDatabase(AbstractDB):
         self.conn = psycopg2.connect(DATABASE_URL)
         self.cur = self.conn.cursor()
 
-        self.drop_all_tables()
-        self.create_tables()
+        # todo: check if tables already created and if no then do it (just do it)
+        # self.drop_all_tables()
+        # self.create_tables()
 
     def create_tables(self):
         self.cur.execute("CREATE TABLE users ("
