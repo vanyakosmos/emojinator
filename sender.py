@@ -34,7 +34,7 @@ def resend_message(bot: Bot, update: Update):
                    {'document': message.document.file_id})
     elif message.text:
         logger.debug('Resending text...')
-        send_text_with_link(bot, message)
+        send_text(bot, message)
 
 
 def get_emoji_markup(emojis):
@@ -101,8 +101,8 @@ def send_media(message: Message, send_media_func, file_type_id: dict):
     message.delete()
 
 
-def send_text_with_link(bot: Bot, message: Message):
-    if not link.findall(message.text):
+def send_text(bot: Bot, message: Message):
+    if not link.findall(message.text) and not (message.forward_from or message.forward_from_chat):
         return
 
     text = add_author(message)
@@ -112,5 +112,5 @@ def send_text_with_link(bot: Bot, message: Message):
     sent_message = bot.send_message(text=text,
                                     chat_id=message.chat_id,
                                     reply_markup=reply_markup)
-    database.add_message(sent_message, message.from_user, message.forward_from)
+    database.add_message(sent_message, message.from_user, message.forward_from_chat or message.forward_from)
     message.delete()
