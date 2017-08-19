@@ -17,6 +17,9 @@ def resend_message(bot: Bot, update: Update):
     if message.forward_from and message.forward_from.username == 'dummy2105_bot':
         return
 
+    if message.reply_to_message:
+        return
+
     if message.photo:
         logger.debug('Resending photo...')
         send_media(message,
