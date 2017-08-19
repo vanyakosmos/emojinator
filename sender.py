@@ -38,15 +38,20 @@ def resend_message(bot: Bot, update: Update):
 
 
 def get_emoji_markup(emojis):
-    keyboard = []
+    keys = []
     sorted_ems = sorted(emojis.keys())
     for e in sorted_ems:
         text = e
         count = emojis[e]
         if count:
             text += f' {count}'
-        keyboard.append(InlineKeyboardButton(text, callback_data=e))
-    return InlineKeyboardMarkup([keyboard])
+        keys.append(InlineKeyboardButton(text, callback_data=e))
+    max_cols = 3
+    keyboard = []
+    while keys:
+        keyboard += [keys[:max_cols]]
+        keys = keys[max_cols:]
+    return InlineKeyboardMarkup(keyboard)
 
 
 def emoji_callback(bot: Bot, update: Update):

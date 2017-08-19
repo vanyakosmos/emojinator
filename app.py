@@ -1,5 +1,6 @@
 import logging
 
+from telegram import Bot, Update
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackQueryHandler
 
 from commands import command_start, command_set_emoji_set
@@ -9,9 +10,12 @@ from settings import database, DEBUG, BOT_TOKEN, PORT, APP_NAME
 logger = logging.getLogger(__name__)
 
 
-def error(bot, update, e):
+def error(bot: Bot, update: Update, e):
     del bot
-    logger.warning('Update "%s" caused error "%s"' % (update, e))
+    if str(e) == "Message can't be deleted":
+        logger.warning(f"Can't delete message from user: {update.message.from_user}")
+    else:
+        logger.warning('Update "%s" caused error "%s"' % (update, e))
 
 
 def main():

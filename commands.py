@@ -27,5 +27,6 @@ def command_set_emoji_set(bot: Bot, update: Update, args: list):
     if not args:
         update.message.reply_text('No emojis specified.')
     else:
+        # todo: add only string with emojis
         database.set_emojis(chat_id=chat.id, emojis=args)
         update.message.reply_text(f'Customized emojis: {args}')
