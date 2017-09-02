@@ -8,6 +8,7 @@ DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
 
 BOT_TOKEN = os.getenv('BOT_TOKEN')
 DATABASE_URL = os.getenv('DATABASE_URL')
+MONGO_URL = os.getenv('MONGO_URL', 'mongodb://localhost:27017/')
 
 # heroku
 APP_NAME = os.getenv('APP_NAME')

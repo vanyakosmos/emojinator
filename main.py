@@ -3,8 +3,8 @@ import logging
 from telegram import Bot, Update
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackQueryHandler
 
-from app.commands import command_start, command_set_up_buttons
-from app.sender import resend_message, button_callback
+from app.commands import command_start, command_set_up_buttons, button_callback
+from app.sender import resend_message
 from app.settings import database
 from app.env_vars import DEBUG, BOT_TOKEN, PORT, APP_NAME
 

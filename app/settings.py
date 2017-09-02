@@ -1,6 +1,6 @@
 import logging
 
-from .databases import PostgresDatabase
+from .databases import PostgresDatabase, MongoDB
 from .env_vars import DEBUG
 
 if DEBUG:
@@ -15,4 +15,4 @@ logging.getLogger('telegram').setLevel(logging.WARNING)
 logging.getLogger('JobQueue').setLevel(logging.WARNING)
 
 # database = Database()
-database = PostgresDatabase()
+database: MongoDB = MongoDB()

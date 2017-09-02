@@ -3,7 +3,7 @@ from typing import Dict
 
 from telegram import Message, CallbackQuery, Chat, User
 
-from . import AbstractDB
+from .base import AbstractDB
 
 
 class EmojiMessage(object):

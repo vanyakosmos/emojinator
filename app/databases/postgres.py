@@ -5,7 +5,7 @@ import psycopg2 as psycopg2
 from telegram import CallbackQuery, Chat, Message, User
 
 from app.env_vars import DATABASE_URL
-from . import AbstractDB
+from .base import AbstractDB
 
 
 class PostgresDatabase(AbstractDB):
