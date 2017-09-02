@@ -2,6 +2,8 @@ from typing import Dict
 
 from telegram import Message, CallbackQuery, Chat, User
 
+from .postgres import PostgresDatabase
+
 
 class AbstractDB(object):
     def init_chat(self, chat: Chat):

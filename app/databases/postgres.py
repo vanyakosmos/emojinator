@@ -2,10 +2,10 @@ import logging
 from typing import Dict
 
 import psycopg2 as psycopg2
-from telegram import Message, CallbackQuery, Chat, User
+from telegram import CallbackQuery, Chat, Message, User
 
+from app.env_vars import DATABASE_URL
 from . import AbstractDB
-from env_conts import DATABASE_URL
 
 
 class PostgresDatabase(AbstractDB):
@@ -30,6 +30,7 @@ class PostgresDatabase(AbstractDB):
                          "title varchar, "
                          "username varchar);")
 
+        # fixme messages must have specified chat_id
         self.cur.execute("CREATE TABLE messages ("
                          "id BIGINT PRIMARY KEY, "
                          "from_user_id BIGINT REFERENCES users(id), "

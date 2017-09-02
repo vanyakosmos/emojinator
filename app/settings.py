@@ -1,9 +1,7 @@
 import logging
 
-from databases.ram import Database
-from databases.postgres import PostgresDatabase
-
-from env_conts import *
+from .databases import PostgresDatabase
+from .env_vars import DEBUG
 
 if DEBUG:
     logging_level = logging.DEBUG

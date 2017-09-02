@@ -3,9 +3,10 @@ import logging
 from telegram import Bot, Update
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackQueryHandler
 
-from commands import command_start, command_set_emoji_set
-from sender import resend_message, emoji_callback
-from settings import database, DEBUG, BOT_TOKEN, PORT, APP_NAME
+from app.commands import command_start, command_set_up_buttons
+from app.sender import resend_message, button_callback
+from app.settings import database
+from app.env_vars import DEBUG, BOT_TOKEN, PORT, APP_NAME
 
 logger = logging.getLogger(__name__)
 
@@ -25,14 +26,12 @@ def main():
     commands = [
         CommandHandler("start", command_start),
         CommandHandler("help", command_start),
-        CommandHandler("emoji", command_set_emoji_set, pass_args=True),
-        CallbackQueryHandler(emoji_callback),
+        CommandHandler("setup", command_set_up_buttons, pass_args=True),
+        CallbackQueryHandler(button_callback),
     ]
-    for command in commands:
-        dp.add_handler(command)
+    [dp.add_handler(c) for c in commands]
 
     dp.add_handler(MessageHandler(Filters.all, resend_message))
-
     dp.add_error_handler(error)
 
     if DEBUG:
