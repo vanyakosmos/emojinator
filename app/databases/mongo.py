@@ -5,7 +5,7 @@ import pymongo
 from pymongo import ReturnDocument
 from telegram import CallbackQuery, Chat, Message, User
 
-from app.env_vars import MONGO_URL
+from app.env_vars import MONGODB_URI
 
 
 def serialize_message(message: Message, from_user: User, forward_from: User, rates):
@@ -54,8 +54,8 @@ class Cols(object):
 class MongoDB(object):
     def __init__(self):
         self.logger = logging.getLogger(self.__class__.__name__)
-        self.client = pymongo.MongoClient(MONGO_URL)
-        self.db = self.client.get_database('test')
+        self.client = pymongo.MongoClient(MONGODB_URI)
+        self.db = self.client.get_database()
 
     def add_message(self, message: Message, from_user: User, forward_from: User):
         # insert message
