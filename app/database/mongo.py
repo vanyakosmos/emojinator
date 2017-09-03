@@ -57,6 +57,10 @@ class MongoDB(object):
             self.logger.debug('Unregistered message rated.')
             return None
 
+        # update user info
+        self._upsert_user(query.from_user)
+
+        # delete old rate and check if clicked button was the same as previously clicked
         same, msg = self._delete_old_rate(chat_id, msg_id, user_id, chosen)
 
         if not same:
