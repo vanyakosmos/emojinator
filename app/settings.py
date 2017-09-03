@@ -1,6 +1,6 @@
 import logging
 
-from .database import PostgresDatabase, MongoDB
+from .database import MongoDB
 from .env_vars import DEBUG
 
 if DEBUG:
