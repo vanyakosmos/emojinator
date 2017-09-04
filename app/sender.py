@@ -14,6 +14,7 @@ link = re.compile(r'https?://.\S+')
 
 @log
 def resend_message(bot: Bot, update: Update):
+    resent = True
     message: Message = update.message
 
     if message.reply_to_message:
@@ -45,8 +46,11 @@ def resend_message(bot: Bot, update: Update):
 
         logger.debug('Resending text...')
         send_text(bot, message)
+    else:
+        resent = False
 
-    message.delete()
+    if resent:
+        message.delete()
 
 
 def send_media(message: Message, sender, file_type_id: dict):
