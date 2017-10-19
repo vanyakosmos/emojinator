@@ -21,12 +21,12 @@ class MongoDB(object):
         self.rates = self.db.get_collection('rates')
         self.chats = self.db.get_collection('chats')
 
-    def add_message(self, message: Message, from_user: User, forward_from: User):
+    def add_message(self, message: Message, from_user: User, forward_from: User, original_message):
         # insert message
         # add new message
         rates = self.get_buttons_rates(message.chat)
         self.messages.insert_one(
-            serializers.message(message, from_user, forward_from, rates)
+            serializers.message(message, from_user, forward_from, rates, original_message)
         )
         # upsert users
         self._upsert_user(from_user)
@@ -117,6 +117,24 @@ class MongoDB(object):
         self.chats.update_one({'chat_id': chat.id},
                               {"$set": serializers.chat(chat.id, buttons)},
                               upsert=True)
+
+    def original_message(self, query: CallbackQuery) -> Message or None:
+        chat_id = query.message.chat_id
+        msg_id = query.message.message_id
+
+        msg = self.messages.find_one({
+            'chat_id': chat_id,
+            'msg_id': msg_id,
+        })
+        if msg is None:
+            self.logger.debug('Unregistered messages rated.')
+            return None
+
+        if msg.get('original', None) is None:
+            self.logger.debug("Original message wasn't saved")
+            return None
+
+        return Message.de_json(msg['original'], None)
 
     def close(self):
         self.client.close()

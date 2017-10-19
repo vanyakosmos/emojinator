@@ -63,7 +63,6 @@ def send_media(message: Message, sender, file_type_id: dict):
                           reply_markup=reply_markup,
                           disable_notification=True,
                           **file_type_id)
-    database.add_message(sent_message, message.from_user, message.forward_from)
 
 
 def signature_text(message: Message):
@@ -84,6 +83,8 @@ def signature_text(message: Message):
     if message.text:
         text = message.text + '\n' + text
     return text
+    database.add_message(sent_message, message.from_user,
+                         message.forward_from, original_message=message)
 
 
 def send_text(bot: Bot, message: Message):
@@ -95,4 +96,5 @@ def send_text(bot: Bot, message: Message):
                                     chat_id=message.chat_id,
                                     reply_markup=reply_markup,
                                     disable_notification=True)
-    database.add_message(sent_message, message.from_user, message.forward_from_chat or message.forward_from)
+    database.add_message(sent_message, message.from_user,
+                         message.forward_from_chat or message.forward_from, original_message=message)
