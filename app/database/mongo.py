@@ -6,14 +6,7 @@ from pymongo import ReturnDocument
 from telegram import CallbackQuery, Chat, Message, User
 
 from app.env_vars import MONGODB_URI
-from .serializers import Serializer
-
-
-class Cols(object):
-    MESSAGES = 'messages'
-    USERS = 'users'
-    RATES = 'rates'
-    CHAT = 'chats'
+from . import serializers
 
 
 # todo: optimize queries with bulk operations
@@ -23,12 +16,17 @@ class MongoDB(object):
         self.client = pymongo.MongoClient(MONGODB_URI)
         self.db = self.client.get_database()
 
+        self.messages = self.db.get_collection('messages')
+        self.users = self.db.get_collection('users')
+        self.rates = self.db.get_collection('rates')
+        self.chats = self.db.get_collection('chats')
+
     def add_message(self, message: Message, from_user: User, forward_from: User):
         # insert message
         # add new message
         rates = self.get_buttons_rates(message.chat)
-        self.db.get_collection(Cols.MESSAGES).insert_one(
-            Serializer.message(message, from_user, forward_from, rates)
+        self.messages.insert_one(
+            serializers.message(message, from_user, forward_from, rates)
         )
         # upsert users
         self._upsert_user(from_user)
@@ -36,9 +34,9 @@ class MongoDB(object):
             self._upsert_user(forward_from)
 
     def _upsert_user(self, user):
-        self.db.get_collection(Cols.USERS).update_one(
+        self.users.update_one(
             {'user_id': user.id},
-            {"$set": Serializer.user(user)},
+            {"$set": serializers.user(user)},
             upsert=True
         )
 
@@ -48,13 +46,13 @@ class MongoDB(object):
         user_id = query.from_user.id
         chosen = query.data
 
-        # check if message unregistered
-        msg = self.db.get_collection(Cols.MESSAGES).find_one({
+        # check if messages unregistered
+        msg = self.messages.find_one({
             'chat_id': chat_id,
             'msg_id': msg_id,
         })
         if msg is None:
-            self.logger.debug('Unregistered message rated.')
+            self.logger.debug('Unregistered messages rated.')
             return None
 
         # update user info
@@ -72,7 +70,7 @@ class MongoDB(object):
         """
         :return: (is same button, updated message)
         """
-        rate = self.db.get_collection(Cols.RATES).find_one_and_delete({
+        rate = self.rates.find_one_and_delete({
             'chat_id': chat_id,
             'msg_id': msg_id,
             'user_id': user_id,
@@ -84,13 +82,13 @@ class MongoDB(object):
         return False, None
 
     def _add_new_rate(self, chat_id, msg_id, user_id, chosen) -> dict:
-        self.db.get_collection(Cols.RATES).insert_one(
-            Serializer.rate(chat_id, msg_id, user_id, chosen)
+        self.rates.insert_one(
+            serializers.rate(chat_id, msg_id, user_id, chosen)
         )
         return self._update_message_rating(chat_id, msg_id, chosen, increment=1)
 
     def _update_message_rating(self, chat_id, msg_id, chosen, increment):
-        return self.db.get_collection(Cols.MESSAGES).find_one_and_update(
+        return self.messages.find_one_and_update(
             {
                 'chat_id': chat_id,
                 'msg_id': msg_id,
@@ -102,9 +100,9 @@ class MongoDB(object):
 
     def get_buttons_rates(self, chat: Chat) -> Dict[str, Dict[str, int]]:
         default_buttons = ['👍', '❤️', '😂', '😯', '😢', '😡']  # tnx facebook
-        res = self.db.get_collection(Cols.CHAT).find_one({'chat_id': chat.id})
+        res = self.chats.find_one({'chat_id': chat.id})
         if res is None:
-            self.db.get_collection(Cols.CHAT).insert_one({
+            self.chats.insert_one({
                 'chat_id': chat.id,
                 'buttons': default_buttons,
             })
@@ -116,9 +114,9 @@ class MongoDB(object):
 
     def set_buttons(self, chat: Chat, buttons: List[str]):
         # upsert chat info
-        self.db.get_collection(Cols.CHAT).update_one({'chat_id': chat.id},
-                                                     {"$set": Serializer.chat(chat.id, buttons)},
-                                                     upsert=True)
+        self.chats.update_one({'chat_id': chat.id},
+                              {"$set": serializers.chat(chat.id, buttons)},
+                              upsert=True)
 
     def close(self):
         self.client.close()
