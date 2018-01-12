@@ -40,6 +40,10 @@ def resend_message(bot: Bot, update: Update):
 
         return
 
+    # // makes bot ignore a link or photo
+    if (message.text and message.text.startswith('//')) or (message.caption and message.caption.startswith('//')):
+        return
+
     if message.photo:
         logger.debug('Resending photo...')
         send_media(message,
