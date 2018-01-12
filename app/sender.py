@@ -19,7 +19,7 @@ def resend_message(bot: Bot, update: Update):
 
     if message.reply_to_message:
         if message.reply_to_message.from_user.id == bot.get_me().id \
-                and message.text.strip().startswith('+') \
+                and message.text and message.text.strip().startswith('+') \
                 and 1 < len(message.text.strip()) < 6:
 
             button = message.text.strip()[1:]
