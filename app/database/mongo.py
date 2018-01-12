@@ -43,8 +43,13 @@ class MongoDB(object):
     def rate(self, query: CallbackQuery) -> Dict[str, int] or None:
         chat_id = query.message.chat_id
         msg_id = query.message.message_id
-        user_id = query.from_user.id
+        from_user = query.from_user
         chosen = query.data
+
+        return self.rate_message(chat_id, msg_id, from_user, chosen)
+
+    def rate_message(self, chat_id, msg_id, from_user, chosen) -> Dict[str, int] or None:
+        user_id = from_user.id
 
         # check if messages unregistered
         msg = self.messages.find_one({
@@ -56,7 +61,7 @@ class MongoDB(object):
             return None
 
         # update user info
-        self._upsert_user(query.from_user)
+        self._upsert_user(from_user)
 
         # delete old rate and check if clicked button was the same as previously clicked
         same, msg = self._delete_old_rate(chat_id, msg_id, user_id, chosen)
