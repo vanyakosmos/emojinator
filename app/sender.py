@@ -25,6 +25,9 @@ def resend_message(bot: Bot, update: Update):
     if text and text.startswith('--'):
         return
 
+    if message.reply_to_message:
+        return
+
     if message.photo:
         logger.debug('Resending photo...')
         send_media(message,
@@ -82,10 +85,12 @@ def emoji_reply(bot: Bot, message: Message):
                                       bot_message.message_id,
                                       message.from_user,
                                       button)
-        reply_markup = get_buttons_markup(bot_message, rates)
+        original_msg = database.original_message(chat_id=bot_message.chat_id, msg_id=bot_message.message_id)
+        reply_markup = get_buttons_markup(original_msg, rates)
         bot_message.edit_reply_markup(reply_markup=reply_markup)
         message.delete()
-    return True
+        return True
+    return False
 
 
 def send_media(message: Message, sender, file_type_id: dict):

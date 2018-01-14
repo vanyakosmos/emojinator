@@ -45,7 +45,7 @@ def button_callback(bot: Bot, update: Update):
     message = query.message
     res = database.rate(query)
     if res:
-        original_msg = database.original_message(query)
+        original_msg = database.original_message(query=query)
         reply_markup = get_buttons_markup(original_msg, res)
         bot.edit_message_reply_markup(chat_id=message.chat_id,
                                       message_id=message.message_id,
