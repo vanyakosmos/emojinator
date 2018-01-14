@@ -7,7 +7,7 @@ def message(msg: Message, from_user: User, forward_from: User, rates: dict, orig
         'msg_id': msg.message_id,
         'from_user': from_user and from_user.id,
         'forward_from': forward_from and forward_from.id,
-        'rates': rates,  # { button: {pos: int, score: int} }
+        'rates': rates,  # { button: {pos: int, score: int}, ... }
         'original': original_message.to_dict(),
     }
 

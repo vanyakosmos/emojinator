@@ -21,7 +21,7 @@ class MongoDB(object):
         self.rates = self.db.get_collection('rates')
         self.chats = self.db.get_collection('chats')
 
-    def add_message(self, message: Message, from_user: User, forward_from: User, original_message):
+    def add_message(self, message: Message, from_user: User, forward_from: User, original_message: Message):
         # insert message
         # add new message
         rates = self.get_buttons_rates(message.chat)
@@ -45,19 +45,17 @@ class MongoDB(object):
         msg_id = query.message.message_id
         from_user = query.from_user
         chosen = query.data
-
         return self.rate_message(chat_id, msg_id, from_user, chosen)
 
     def rate_message(self, chat_id, msg_id, from_user, chosen) -> Dict[str, int] or None:
         user_id = from_user.id
 
-        # check if messages unregistered
         msg = self.messages.find_one({
             'chat_id': chat_id,
             'msg_id': msg_id,
         })
         if msg is None:
-            self.logger.debug('Unregistered messages rated.')
+            self.logger.debug('Unregistered message was rated.')
             return None
 
         # update user info
@@ -70,6 +68,18 @@ class MongoDB(object):
             msg = self._add_new_rate(chat_id, msg_id, user_id, chosen)
 
         return msg.get('rates')
+
+    def add_button(self, message: Message, button: str):
+        msg = self.messages.find_one({'chat_id': message.chat_id, 'msg_id': message.message_id})
+        rates = msg['rates']
+        print('rates', button, len(rates), rates)
+        if button in rates or len(rates) >= 12:
+            return rates
+        rates[button] = {'pos': len(rates), 'score': 0}
+        self.messages.update_one(
+            filter={'_id': msg['_id']},
+            update={'$set': {'rates': rates}})
+        return rates
 
     def _delete_old_rate(self, chat_id, msg_id, user_id, chosen):
         """

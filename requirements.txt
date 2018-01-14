@@ -1,4 +1,4 @@
 pymongo
-python-dotenv==0.6.4
-python-telegram-bot==6.1.0
+python-dotenv
+python-telegram-bot
 psycopg2==2.7.1

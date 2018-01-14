@@ -10,12 +10,12 @@ def get_buttons_markup(message: Message, rates: dict):
         if score:
             text += f' {score}'
         keys.append(InlineKeyboardButton(text, callback_data=name))
-    max_cols = 3
 
     keyboard = []
     if message:
         keyboard.append(sign_buttons(message))
 
+    max_cols = 3
     while keys:
         keyboard += [keys[:max_cols]]
         keys = keys[max_cols:]
