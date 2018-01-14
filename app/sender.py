@@ -18,6 +18,30 @@ def resend_message(bot: Bot, update: Update):
     message: Message = update.message
 
     if message.reply_to_message:
+        if message.reply_to_message.from_user.id == bot.get_me().id \
+                and message.text and message.text.strip().startswith('+') \
+                and 1 < len(message.text.strip()) < 6:
+
+            button = message.text.strip()[1:]
+            rates = message.reply_to_message.get('rates')
+            if button in rates.keys:
+                return
+            chosen = len(rates)
+            rates[button] = {'pos': chosen, 'score': 0}
+
+            reply_markup = get_buttons_markup(message.reply_to_message, rates)
+            message.reply_to_message.edit_reply_markup(reply_markup)
+
+            database.rate_message(message.reply_to_message.chat_id,
+                                  message.reply_to_message.message_id,
+                                  message.reply_to_message.from_user,
+                                  chosen)
+            message.delete()
+
+        return
+
+    # // makes bot ignore a link or photo
+    if (message.text and message.text.startswith('//')) or (message.caption and message.caption.startswith('//')):
         return
 
     if message.photo:
