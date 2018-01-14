@@ -67,12 +67,33 @@ class MongoDB(object):
         if not same:
             msg = self._add_new_rate(chat_id, msg_id, user_id, chosen)
 
-        return msg.get('rates')
+        rates = self._clean_buttons(msg, chat_id, msg_id)
+        return rates
+
+    def _clean_buttons(self, msg: dict, chat_id: int, msg_id: int):
+        rates = msg.get('rates')
+        chat_buttons = self.chat_buttons(chat_id)
+        def_len = len(chat_buttons)
+        # filter out non-default with 0 score
+        rates = {b: stat for b, stat in rates.items()
+                 if stat['score'] != 0 or stat['pos'] < def_len}
+        # fix pos
+        index = def_len
+        for b, stat in rates.items():
+            if stat['pos'] >= def_len:
+                stat['pos'] = index
+                index += 1
+        self.messages.update_one(
+            filter={'chat_id': chat_id, 'msg_id': msg_id},
+            update={'$set': {'rates': rates}})
+        return rates
+
+    def chat_buttons(self, chat_id):
+        return self.chats.find_one({'chat_id': chat_id})['buttons']
 
     def add_button(self, message: Message, button: str):
         msg = self.messages.find_one({'chat_id': message.chat_id, 'msg_id': message.message_id})
         rates = msg['rates']
-        print('rates', button, len(rates), rates)
         if button in rates or len(rates) >= 12:
             return rates
         rates[button] = {'pos': len(rates), 'score': 0}
