@@ -9,7 +9,6 @@ from app.env_vars import MONGODB_URI
 from . import serializers
 
 
-# todo: optimize queries with bulk operations
 class MongoDB(object):
     def __init__(self):
         self.logger = logging.getLogger(self.__class__.__name__)
@@ -154,9 +153,10 @@ class MongoDB(object):
                               {"$set": serializers.chat(chat.id, buttons)},
                               upsert=True)
 
-    def original_message(self, query: CallbackQuery) -> Message or None:
-        chat_id = query.message.chat_id
-        msg_id = query.message.message_id
+    def original_message(self, query: CallbackQuery=None, chat_id=None, msg_id=None) -> Message or None:
+        if query:
+            chat_id = query.message.chat_id
+            msg_id = query.message.message_id
 
         msg = self.messages.find_one({
             'chat_id': chat_id,

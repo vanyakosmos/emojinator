@@ -1,7 +1,7 @@
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Message, User, Chat
 
 
-def get_buttons_markup(message: Message, rates: dict):
+def get_buttons_markup(original_message: Message, rates: dict):
     keys = []
     sorted_bs = sorted(rates.keys(), key=lambda x: rates[x]['pos'])
     for name in sorted_bs:
@@ -12,8 +12,8 @@ def get_buttons_markup(message: Message, rates: dict):
         keys.append(InlineKeyboardButton(text, callback_data=name))
 
     keyboard = []
-    if message:
-        keyboard.append(sign_buttons(message))
+    if original_message:
+        keyboard.append(sign_buttons(original_message))
 
     max_cols = 3
     while keys:
