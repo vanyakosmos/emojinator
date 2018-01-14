@@ -21,7 +21,7 @@ class MongoDB(object):
         self.rates = self.db.get_collection('rates')
         self.chats = self.db.get_collection('chats')
 
-    def add_message(self, message: Message, from_user: User, forward_from: User, original_message):
+    def add_message(self, message: Message, from_user: User, forward_from: User, original_message: Message):
         # insert message
         # add new message
         rates = self.get_buttons_rates(message.chat)
@@ -43,20 +43,23 @@ class MongoDB(object):
     def rate(self, query: CallbackQuery) -> Dict[str, int] or None:
         chat_id = query.message.chat_id
         msg_id = query.message.message_id
-        user_id = query.from_user.id
+        from_user = query.from_user
         chosen = query.data
+        return self.rate_message(chat_id, msg_id, from_user, chosen)
 
-        # check if messages unregistered
+    def rate_message(self, chat_id, msg_id, from_user, chosen) -> Dict[str, int] or None:
+        user_id = from_user.id
+
         msg = self.messages.find_one({
             'chat_id': chat_id,
             'msg_id': msg_id,
         })
         if msg is None:
-            self.logger.debug('Unregistered messages rated.')
+            self.logger.debug('Unregistered message was rated.')
             return None
 
         # update user info
-        self._upsert_user(query.from_user)
+        self._upsert_user(from_user)
 
         # delete old rate and check if clicked button was the same as previously clicked
         same, msg = self._delete_old_rate(chat_id, msg_id, user_id, chosen)
@@ -64,7 +67,40 @@ class MongoDB(object):
         if not same:
             msg = self._add_new_rate(chat_id, msg_id, user_id, chosen)
 
-        return msg.get('rates')
+        rates = self._clean_buttons(msg, chat_id, msg_id)
+        return rates
+
+    def _clean_buttons(self, msg: dict, chat_id: int, msg_id: int):
+        rates = msg.get('rates')
+        chat_buttons = self.chat_buttons(chat_id)
+        def_len = len(chat_buttons)
+        # filter out non-default with 0 score
+        rates = {b: stat for b, stat in rates.items()
+                 if stat['score'] != 0 or stat['pos'] < def_len}
+        # fix pos
+        index = def_len
+        for b, stat in rates.items():
+            if stat['pos'] >= def_len:
+                stat['pos'] = index
+                index += 1
+        self.messages.update_one(
+            filter={'chat_id': chat_id, 'msg_id': msg_id},
+            update={'$set': {'rates': rates}})
+        return rates
+
+    def chat_buttons(self, chat_id):
+        return self.chats.find_one({'chat_id': chat_id})['buttons']
+
+    def add_button(self, message: Message, button: str):
+        msg = self.messages.find_one({'chat_id': message.chat_id, 'msg_id': message.message_id})
+        rates = msg['rates']
+        if button in rates or len(rates) >= 12:
+            return rates
+        rates[button] = {'pos': len(rates), 'score': 0}
+        self.messages.update_one(
+            filter={'_id': msg['_id']},
+            update={'$set': {'rates': rates}})
+        return rates
 
     def _delete_old_rate(self, chat_id, msg_id, user_id, chosen):
         """

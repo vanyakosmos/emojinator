@@ -17,7 +17,12 @@ def resend_message(bot: Bot, update: Update):
     resent = True
     message: Message = update.message
 
-    if message.reply_to_message:
+    if emoji_reply(bot, message):
+        return
+
+    # ignore message if it starts with --
+    text = message.text or message.caption
+    if text and text.startswith('--'):
         return
 
     if message.photo:
@@ -39,11 +44,16 @@ def resend_message(bot: Bot, update: Update):
                    {'document': message.document.file_id})
 
     elif message.text:
-        if (not message.forward_from and
-                not message.forward_from_chat and
-                not link.findall(message.text)):
+        skip = all([
+            not message.forward_from,
+            not message.forward_from_chat,
+            not link.findall(message.text),
+            not message.text.startswith('++'),
+        ])
+        if skip:
             return
-
+        if message.text.startswith('++'):
+            message.text = message.text[2:]
         logger.debug('Resending text...')
         send_text(bot, message)
     else:
@@ -51,6 +61,31 @@ def resend_message(bot: Bot, update: Update):
 
     if resent:
         message.delete()
+
+
+def emoji_reply(bot: Bot, message: Message):
+    bot_message = message.reply_to_message
+    if not bot_message:
+        return False
+    text = message.text or message.caption
+    if not text:
+        return False
+
+    text = text.strip()
+    to_bot = bot_message.from_user.id == bot.get_me().id
+    start_with_plus = text.startswith('+')
+    short = 1 < len(text) <= 10
+    if to_bot and start_with_plus and short:
+        button = text[1:]
+        database.add_button(bot_message, button)
+        rates = database.rate_message(bot_message.chat_id,
+                                      bot_message.message_id,
+                                      message.from_user,
+                                      button)
+        reply_markup = get_buttons_markup(bot_message, rates)
+        bot_message.edit_reply_markup(reply_markup=reply_markup)
+        message.delete()
+    return True
 
 
 def send_media(message: Message, sender, file_type_id: dict):
