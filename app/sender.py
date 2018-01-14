@@ -20,9 +20,9 @@ def resend_message(bot: Bot, update: Update):
     if emoji_reply(bot, message):
         return
 
-    # ignore message if it starts with //
+    # ignore message if it starts with --
     text = message.text or message.caption
-    if text and text.startswith('//'):
+    if text and text.startswith('--'):
         return
 
     if message.photo:
@@ -44,11 +44,16 @@ def resend_message(bot: Bot, update: Update):
                    {'document': message.document.file_id})
 
     elif message.text:
-        if (not message.forward_from and
-                not message.forward_from_chat and
-                not link.findall(message.text)):
+        skip = all([
+            not message.forward_from,
+            not message.forward_from_chat,
+            not link.findall(message.text),
+            not message.text.startswith('++'),
+        ])
+        if skip:
             return
-
+        if message.text.startswith('++'):
+            message.text = message.text[2:]
         logger.debug('Resending text...')
         send_text(bot, message)
     else:
