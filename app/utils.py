@@ -26,15 +26,17 @@ def get_buttons_markup(original_message: Message, rates: dict):
 def sign_buttons(message: Message):
     buttons = []
 
-    from_user = message.from_user
-    forward_from: User = message.forward_from
+    from_user = message.from_user  # type: User
+    forward_from = message.forward_from  # type: User
     forward_from_chat: Chat = message.forward_from_chat
 
     # by user
     if from_user.username:
         from_user_button = InlineKeyboardButton('by ' + from_user.name, url='https://t.me/' + from_user.username)
     else:
-        from_user_button = InlineKeyboardButton('by ' + from_user.name)
+        trash_link = 'https://www.reddit.com/r/Telegram/submit?title=why%20telegram%20does%20not%20accept%20empty%20' \
+                     'inline%20buttons%20and%20force%20me%20to%20fill%20space%20with%20garbage%20links'
+        from_user_button = InlineKeyboardButton('by ' + from_user.name, url=trash_link)
     buttons.append(from_user_button)
 
     # from source
