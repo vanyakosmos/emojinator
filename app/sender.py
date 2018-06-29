@@ -98,9 +98,10 @@ def send_media(message: Message, sender, file_type_id: dict):
     reply_markup = get_buttons_markup(message, rates)
 
     sent_message = sender(chat_id=message.chat_id,
-                          caption=message.caption,
+                          caption=message.caption_html,
                           reply_markup=reply_markup,
                           disable_notification=True,
+                          parse_mode='HTML',
                           **file_type_id)
     database.add_message(sent_message, message.from_user,
                          message.forward_from, original_message=message)
@@ -109,9 +110,10 @@ def send_media(message: Message, sender, file_type_id: dict):
 def send_text(bot: Bot, message: Message):
     rates = database.get_buttons_rates(message.chat)
     reply_markup = get_buttons_markup(message, rates)
-    sent_message = bot.send_message(text=message.text,
+    sent_message = bot.send_message(text=message.text_html,
                                     chat_id=message.chat_id,
                                     reply_markup=reply_markup,
-                                    disable_notification=True)
+                                    disable_notification=True,
+                                    parse_mode='HTML')
     database.add_message(sent_message, message.from_user,
                          message.forward_from_chat or message.forward_from, original_message=message)
