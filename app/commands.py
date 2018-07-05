@@ -2,12 +2,13 @@ from typing import List
 
 from telegram import Bot, ParseMode, Update
 
-from .decorators import log
+from .decorators import admin_access, log
 from .settings import database
 from .utils import get_buttons_markup
 
 
 @log
+@admin_access
 def command_start(bot: Bot, update: Update):
     del bot
     lines = [
@@ -19,6 +20,7 @@ def command_start(bot: Bot, update: Update):
 
 
 @log
+@admin_access
 def command_set_up_buttons(bot: Bot, update: Update, args: List[str]):
     del bot
     chat = update.message.chat
