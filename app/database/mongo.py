@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, List
+from typing import Dict, List, Tuple, Optional
 
 import pymongo
 from pymongo import ReturnDocument
@@ -20,7 +20,8 @@ class MongoDB(object):
         self.rates = self.db.get_collection('rates')
         self.chats = self.db.get_collection('chats')
 
-    def add_message(self, message: Message, from_user: User, forward_from: User, original_message: Message):
+    def add_message(self, message: Message, from_user: User,
+                    forward_from: User, original_message: Message):
         # insert message
         # add new message
         rates = self.get_buttons_rates(message.chat)
@@ -46,7 +47,8 @@ class MongoDB(object):
         chosen = query.data
         return self.rate_message(chat_id, msg_id, from_user, chosen)
 
-    def rate_message(self, chat_id, msg_id, from_user, chosen) -> Dict[str, int] or None:
+    def rate_message(self, chat_id, msg_id,
+                     from_user, chosen) -> Tuple[Optional[Dict[str, int]], bool]:
         user_id = from_user.id
 
         msg = self.messages.find_one({
@@ -55,7 +57,7 @@ class MongoDB(object):
         })
         if msg is None:
             self.logger.debug('Unregistered message was rated.')
-            return None
+            return None, False
 
         # update user info
         self._upsert_user(from_user)
@@ -67,7 +69,7 @@ class MongoDB(object):
             msg = self._add_new_rate(chat_id, msg_id, user_id, chosen)
 
         rates = self._clean_buttons(msg, chat_id, msg_id)
-        return rates
+        return rates, same
 
     def _clean_buttons(self, msg: dict, chat_id: int, msg_id: int):
         rates = msg.get('rates')
@@ -153,7 +155,8 @@ class MongoDB(object):
                               {"$set": serializers.chat(chat.id, buttons)},
                               upsert=True)
 
-    def original_message(self, query: CallbackQuery=None, chat_id=None, msg_id=None) -> Message or None:
+    def original_message(self, query: CallbackQuery=None,
+                         chat_id=None, msg_id=None) -> Optional[Message]:
         if query:
             chat_id = query.message.chat_id
             msg_id = query.message.message_id
