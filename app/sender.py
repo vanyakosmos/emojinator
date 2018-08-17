@@ -81,11 +81,12 @@ def emoji_reply(bot: Bot, message: Message):
     if to_bot and start_with_plus and short:
         button = text[1:]
         database.add_button(bot_message, button)
-        rates = database.rate_message(bot_message.chat_id,
-                                      bot_message.message_id,
-                                      message.from_user,
-                                      button)
-        original_msg = database.original_message(chat_id=bot_message.chat_id, msg_id=bot_message.message_id)
+        rates, _ = database.rate_message(bot_message.chat_id,
+                                         bot_message.message_id,
+                                         message.from_user,
+                                         button)
+        original_msg = database.original_message(chat_id=bot_message.chat_id,
+                                                 msg_id=bot_message.message_id)
         reply_markup = get_buttons_markup(original_msg, rates)
         bot_message.edit_reply_markup(reply_markup=reply_markup)
         message.delete()
@@ -116,4 +117,5 @@ def send_text(bot: Bot, message: Message):
                                     disable_notification=True,
                                     parse_mode='HTML')
     database.add_message(sent_message, message.from_user,
-                         message.forward_from_chat or message.forward_from, original_message=message)
+                         message.forward_from_chat or message.forward_from,
+                         original_message=message)
